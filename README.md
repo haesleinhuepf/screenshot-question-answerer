@@ -6,6 +6,8 @@ A Python application that allows you to capture a screenshot of a question and g
 
 This is research tool for exploring LLM-assisted user interaces. The screenshots you take using this tool will be sent to the AI Service provider remotely and processed there. Make sure to not submit screenshots of private, personal or secret data.
 
+![](https://github.com/haesleinhuepf/screenshot-question-answerer/blob/main/docs/demo.gif?raw=true)
+
 ## Installation
 
 1. Create a new conda environment:
