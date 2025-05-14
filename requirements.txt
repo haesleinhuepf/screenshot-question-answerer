@@ -1,0 +1,5 @@
+Pillow
+pyautogui
+pyperclip
+anthropic
+python-dotenv
