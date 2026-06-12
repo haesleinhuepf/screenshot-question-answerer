@@ -321,14 +321,37 @@
       errorMsg.textContent = '';
       apiKeyConfirm.disabled = true;
 
-      try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' } },
-          audio: false
-        });
-      } catch (err) {
+      // Camera requires a secure context (HTTPS or localhost) on most mobile browsers.
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         apiKeyConfirm.disabled = false;
-        errorMsg.textContent = 'Could not access camera: ' + err.message;
+        errorMsg.textContent =
+          'Camera not available. Please open this page over HTTPS (e.g. host it on a web server with TLS).';
+        return;
+      }
+
+      // Try rear-facing camera first, then fall back to any camera.
+      const constraints = [
+        { video: { facingMode: { ideal: 'environment' } }, audio: false },
+        { video: true, audio: false }
+      ];
+
+      let lastErr = null;
+      for (const constraint of constraints) {
+        try {
+          cameraStream = await navigator.mediaDevices.getUserMedia(constraint);
+          break;
+        } catch (err) {
+          lastErr = err;
+        }
+      }
+
+      if (lastErr) {
+        apiKeyConfirm.disabled = false;
+        const isPermission =
+          lastErr.name === 'NotAllowedError' || lastErr.name === 'PermissionDeniedError';
+        errorMsg.textContent = isPermission
+          ? 'Camera access was denied. On mobile, make sure the page is served over HTTPS and that you allow camera permission in your browser settings.'
+          : 'Could not access camera: ' + lastErr.message;
         return;
       }
 

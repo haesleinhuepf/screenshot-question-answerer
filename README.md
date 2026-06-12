@@ -16,11 +16,13 @@ This is a research tool for exploring LLM-assisted user interfaces. The screensh
 ### Usage
 
 1. Open `index.html` in any modern browser (Chrome, Firefox, Safari, Edge).  
-   On a smartphone, you can serve the file locally or host it on any static web server.
+   On a smartphone, host it on any static HTTPS web server (see note below) and open the URL.
 2. Enter your [Anthropic API key](https://console.anthropic.com/) in the dialog that appears on launch.
 3. Allow camera access when the browser asks.
 4. Point the camera at a question and tap **Answer!**.
 5. The answer is displayed full-screen. Tap **OK** to return to the camera view.
+
+> **HTTPS required on mobile:** Most mobile browsers (Chrome on Android, Safari on iOS) only allow camera access from pages served over **HTTPS** or `localhost`. Opening `index.html` as a local file (`file://`) or over plain HTTP will result in a "Permission denied" error. A quick way to serve the file with HTTPS is to use a tool like [ngrok](https://ngrok.com/) or deploy it to any free static hosting service (e.g. GitHub Pages, Netlify).
 
 > **Privacy note:** Your API key is kept only in memory for the current browser session and is sent exclusively to `api.anthropic.com`.
 
