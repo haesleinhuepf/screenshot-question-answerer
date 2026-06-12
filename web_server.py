@@ -1,18 +1,21 @@
 import argparse
 import binascii
 import json
+import logging
 from base64 import b64decode
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from anthropic import Anthropic
+from anthropic import Anthropic, AnthropicError, AuthenticationError, RateLimitError
 
 PROMPT = (
     "Rephrase the question in the image and options if given. "
     "Answer the question two lines below behind 'Answer:'. "
     "Keep your answer concise and to the point. Do not mention the image."
 )
+
+LOGGER = logging.getLogger(__name__)
 
 
 class WebAppHandler(SimpleHTTPRequestHandler):
@@ -79,7 +82,14 @@ class WebAppHandler(SimpleHTTPRequestHandler):
                 ],
             )
             answer = message.content[0].text
-        except Exception:
+        except AuthenticationError:
+            self._send_json({"error": "Invalid Anthropic API key."}, HTTPStatus.BAD_REQUEST)
+            return
+        except RateLimitError:
+            self._send_json({"error": "Anthropic rate limit exceeded."}, HTTPStatus.TOO_MANY_REQUESTS)
+            return
+        except AnthropicError:
+            LOGGER.exception("Anthropic API call failed")
             self._send_json({"error": "Anthropic request failed."}, HTTPStatus.BAD_GATEWAY)
             return
 
