@@ -1,4 +1,5 @@
 import argparse
+import binascii
 import json
 from base64 import b64decode
 from http import HTTPStatus
@@ -51,7 +52,7 @@ class WebAppHandler(SimpleHTTPRequestHandler):
 
         try:
             b64decode(image_data, validate=True)
-        except Exception:
+        except (binascii.Error, ValueError):
             self._send_json({"error": "Image must be valid base64 data."}, HTTPStatus.BAD_REQUEST)
             return
 

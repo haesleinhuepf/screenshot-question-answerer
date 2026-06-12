@@ -123,8 +123,9 @@
   <div id="keyOverlay" class="overlay" role="dialog" aria-modal="true">
     <div class="card">
       <h1>Enter your Anthropic API key</h1>
+      <label for="apiKeyInput">Anthropic API key</label>
       <input id="apiKeyInput" type="password" placeholder="sk-ant-..." autocomplete="new-password" />
-      <button id="startButton" type="button">Start camera</button>
+      <button id="startButton" type="button" aria-busy="false">Start camera</button>
     </div>
   </div>
 
@@ -136,7 +137,7 @@
   </div>
 
   <canvas id="captureCanvas" hidden></canvas>
-  <div id="status"></div>
+  <div id="status" role="status" aria-live="polite"></div>
 
   <script>
     const camera = document.getElementById('camera');
@@ -147,6 +148,7 @@
     const statusEl = document.getElementById('status');
     const apiKeyInput = document.getElementById('apiKeyInput');
     const captureCanvas = document.getElementById('captureCanvas');
+    const startButton = document.getElementById('startButton');
 
     let apiKey = '';
 
@@ -163,18 +165,23 @@
       camera.srcObject = stream;
     }
 
-    document.getElementById('startButton').addEventListener('click', async () => {
+    startButton.addEventListener('click', async () => {
       apiKey = apiKeyInput.value.trim();
       if (!apiKey) {
         showStatus('Please enter your API key first.');
         return;
       }
+      startButton.disabled = true;
+      startButton.setAttribute('aria-busy', 'true');
       try {
         await startCamera();
         keyOverlay.hidden = true;
         showStatus('');
       } catch (error) {
         showStatus(`Cannot access camera: ${error.message}`);
+      } finally {
+        startButton.disabled = false;
+        startButton.setAttribute('aria-busy', 'false');
       }
     });
 
