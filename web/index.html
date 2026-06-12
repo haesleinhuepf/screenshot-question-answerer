@@ -124,7 +124,7 @@
     <div class="card">
       <h1>Enter your Anthropic API key</h1>
       <label for="apiKeyInput">Anthropic API key</label>
-      <input id="apiKeyInput" type="password" placeholder="sk-ant-..." autocomplete="new-password" />
+      <input id="apiKeyInput" type="password" placeholder="sk-ant-..." autocomplete="off" />
       <button id="startButton" type="button" aria-busy="false">Start camera</button>
     </div>
   </div>
@@ -178,7 +178,13 @@
         keyOverlay.hidden = true;
         showStatus('');
       } catch (error) {
-        showStatus(`Cannot access camera: ${error.message}`);
+        if (error.name === 'NotAllowedError') {
+          showStatus('Camera access denied. Please allow camera permissions in your browser settings.');
+        } else if (error.name === 'NotFoundError') {
+          showStatus('No camera was found on this device.');
+        } else {
+          showStatus(`Cannot access camera: ${error.message}`);
+        }
       } finally {
         startButton.disabled = false;
         startButton.setAttribute('aria-busy', 'false');
