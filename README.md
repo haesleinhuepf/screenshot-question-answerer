@@ -1,14 +1,39 @@
 # Screenshot Question Answerer
 
-A Python application that allows you to capture a screenshot of a question and get an answer using Anthropic's large language model (LLM) [Claude](https://claude.ai).
+A tool that lets you capture an image of a question and get an answer using Anthropic's large language model (LLM) [Claude](https://claude.ai).
+It is available as a standalone **browser app** (`index.html`) as well as a **Python desktop app** (`screenshot_question_answerer.py`).
 
 ## Note
 
-This is research tool for exploring LLM-assisted user interaces. The screenshots you take using this tool will be sent to the AI Service provider remotely and processed there. Make sure to not submit screenshots of private, personal or secret data.
+This is a research tool for exploring LLM-assisted user interfaces. The screenshots you take using this tool will be sent to the AI Service provider remotely and processed there. Make sure to not submit screenshots of private, personal or secret data.
 
 ![](https://github.com/haesleinhuepf/screenshot-question-answerer/blob/main/docs/demo.gif?raw=true)
 
-## Installation
+## Browser App (HTML/JS)
+
+`index.html` is a **fully standalone** browser app — no installation, no server required.  
+It is automatically deployed to **GitHub Pages** on every push to `main`.  
+Open it directly at: **https://haesleinhuepf.github.io/screenshot-question-answerer/**
+
+> To enable GitHub Pages for a fork: go to *Settings → Pages*, set source to **GitHub Actions**, and the `deploy-pages.yml` workflow will publish the site automatically.
+
+### Usage
+
+1. Open the GitHub Pages URL above in any modern browser (Chrome, Firefox, Safari, Edge) — including on a smartphone.
+2. Enter your [Anthropic API key](https://console.anthropic.com/) in the dialog that appears on launch.
+3. Allow camera access when the browser asks.
+4. Point the camera at a question and tap **Answer!**.
+5. The answer is displayed full-screen. Tap **OK** to return to the camera view.
+
+> **HTTPS required on mobile:** Most mobile browsers (Chrome on Android, Safari on iOS) only allow camera access from pages served over **HTTPS** or `localhost`. GitHub Pages provides HTTPS automatically. Opening `index.html` as a local file (`file://`) or over plain HTTP will result in a "Permission denied" error.
+
+> **Privacy note:** Your API key is kept only in memory for the current browser session and is sent exclusively to `api.anthropic.com`.
+
+---
+
+## Python Desktop App
+
+### Installation
 
 1. Create a new conda environment:
 ```bash
@@ -21,7 +46,7 @@ conda activate screenshot-question-answerer
 pip install pillow pyautogui pyperclip anthropic python-dotenv
 ```
 
-## Configuration
+### Configuration
 
 1. Create a `.env` file in the same directory as the script with your Anthropic API key:
 ```
@@ -30,7 +55,7 @@ ANTHROPIC_API_KEY=your_api_key_here
 
 2. Replace `your_api_key_here` with your actual Anthropic API key. You can get one from [Anthropic's Console](https://console.anthropic.com/).
 
-## Usage
+### Usage
 
 1. Run the script:
 ```bash
