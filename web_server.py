@@ -43,8 +43,11 @@ class WebAppHandler(SimpleHTTPRequestHandler):
             self._send_json({"error": "Image is required."}, HTTPStatus.BAD_REQUEST)
             return
 
-        if "," in image_data:
-            _, image_data = image_data.split(",", 1)
+        if image_data.startswith("data:image/png;base64,"):
+            image_data = image_data.split(",", 1)[1]
+        elif "," in image_data:
+            self._send_json({"error": "Image must be a PNG data URL or raw base64 data."}, HTTPStatus.BAD_REQUEST)
+            return
 
         try:
             b64decode(image_data, validate=True)
@@ -75,8 +78,8 @@ class WebAppHandler(SimpleHTTPRequestHandler):
                 ],
             )
             answer = message.content[0].text
-        except Exception as exc:
-            self._send_json({"error": f"Anthropic request failed: {exc}"}, HTTPStatus.BAD_GATEWAY)
+        except Exception:
+            self._send_json({"error": "Anthropic request failed."}, HTTPStatus.BAD_GATEWAY)
             return
 
         self._send_json({"answer": answer}, HTTPStatus.OK)
@@ -92,8 +95,10 @@ class WebAppHandler(SimpleHTTPRequestHandler):
 
 def run_server(host: str, port: int):
     web_dir = Path(__file__).parent / "web"
-    handler_cls = lambda *args, **kwargs: WebAppHandler(*args, directory=str(web_dir), **kwargs)
-    server = ThreadingHTTPServer((host, port), handler_cls)
+    def make_handler(*args, **kwargs):
+        return WebAppHandler(*args, directory=str(web_dir), **kwargs)
+
+    server = ThreadingHTTPServer((host, port), make_handler)
     print(f"Serving web app at http://{host}:{port}")
     server.serve_forever()
 

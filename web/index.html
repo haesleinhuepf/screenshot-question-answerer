@@ -116,14 +116,14 @@
 </head>
 <body>
   <main id="app" aria-live="polite">
-    <video id="camera" autoplay playsinline muted></video>
+    <video id="camera" autoplay playsinline muted aria-label="Camera preview"></video>
     <button id="answerButton" type="button">Answer!</button>
   </main>
 
   <div id="keyOverlay" class="overlay" role="dialog" aria-modal="true">
     <div class="card">
       <h1>Enter your Anthropic API key</h1>
-      <input id="apiKeyInput" type="password" placeholder="sk-ant-..." autocomplete="off" />
+      <input id="apiKeyInput" type="password" placeholder="sk-ant-..." autocomplete="new-password" />
       <button id="startButton" type="button">Start camera</button>
     </div>
   </div>
