@@ -81,6 +81,9 @@ class WebAppHandler(SimpleHTTPRequestHandler):
                     }
                 ],
             )
+            if not message.content or not getattr(message.content[0], "text", None):
+                self._send_json({"error": "Anthropic returned an empty response."}, HTTPStatus.BAD_GATEWAY)
+                return
             answer = message.content[0].text
         except AuthenticationError:
             self._send_json({"error": "Invalid Anthropic API key."}, HTTPStatus.BAD_REQUEST)
@@ -106,6 +109,9 @@ class WebAppHandler(SimpleHTTPRequestHandler):
 
 def run_server(host: str, port: int):
     web_dir = Path(__file__).parent / "web"
+    if not web_dir.exists():
+        raise FileNotFoundError(f"Web directory not found: {web_dir}")
+
     def make_handler(*args, **kwargs):
         return WebAppHandler(*args, directory=str(web_dir), **kwargs)
 

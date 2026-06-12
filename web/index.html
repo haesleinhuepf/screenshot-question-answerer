@@ -197,6 +197,11 @@
       captureCanvas.width = camera.videoWidth;
       captureCanvas.height = camera.videoHeight;
       const ctx = captureCanvas.getContext('2d');
+      if (!ctx) {
+        showStatus('Could not capture camera frame.');
+        answerButton.disabled = false;
+        return;
+      }
       ctx.drawImage(camera, 0, 0, captureCanvas.width, captureCanvas.height);
       const image = captureCanvas.toDataURL('image/png');
 
