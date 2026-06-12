@@ -43,6 +43,23 @@ python screenshot_analyzer.py
 5. Results will appear in a window and be copied to your clipboard
 6. Press ESC at any time to cancel
 
+## Browser Version (HTML/JavaScript + server-side backend)
+
+Run the web server:
+
+```bash
+python web_server.py --host 0.0.0.0 --port 8000
+```
+
+Then open `http://localhost:8000` in your browser (or from your phone on the same network).
+
+Flow:
+
+1. Enter your Anthropic API key in the startup dialog
+2. Allow camera access
+3. Press **Answer!** to send the current camera image to Claude
+4. Read the answer in the full-screen dialog and press **Ok** to return to the camera view
+
 ## Setting Up a Windows Keyboard Shortcut
 
 * Create a new Windows shortcut in the folder "%AppData%\Microsoft\Windows\Start Menu\Programs".

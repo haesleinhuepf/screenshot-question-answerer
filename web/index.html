@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Screenshot Question Answerer</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #111;
+      color: #fff;
+    }
+    #app {
+      width: min(96vw, 1000px);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1rem;
+      align-items: center;
+    }
+    video {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      border-radius: 12px;
+      background: #000;
+      border: 1px solid #333;
+    }
+    button {
+      font-size: 1rem;
+      padding: 0.8rem 1.2rem;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+    }
+    #answerButton {
+      height: fit-content;
+      background: #0d6efd;
+      color: #fff;
+    }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.75);
+      padding: 1rem;
+      z-index: 1000;
+    }
+    .card {
+      width: min(95vw, 420px);
+      background: #1f1f1f;
+      border-radius: 12px;
+      padding: 1rem;
+      border: 1px solid #444;
+    }
+    .card h1 {
+      font-size: 1.2rem;
+      margin-top: 0;
+    }
+    .card input {
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0.5rem 0 1rem;
+      padding: 0.7rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #666;
+    }
+    #answerOverlay .card {
+      width: min(96vw, 900px);
+      height: min(96vh, 900px);
+      display: flex;
+      flex-direction: column;
+    }
+    #answerText {
+      flex: 1;
+      white-space: pre-wrap;
+      overflow: auto;
+      font-size: 1.2rem;
+      line-height: 1.5;
+      padding: 1rem;
+      border: 1px solid #444;
+      border-radius: 10px;
+      background: #111;
+      margin-bottom: 1rem;
+    }
+    #status {
+      position: fixed;
+      bottom: 0.8rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.75);
+      padding: 0.5rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    @media (max-width: 700px) {
+      #app {
+        grid-template-columns: 1fr;
+      }
+      #answerButton {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main id="app" aria-live="polite">
+    <video id="camera" autoplay playsinline muted></video>
+    <button id="answerButton" type="button">Answer!</button>
+  </main>
+
+  <div id="keyOverlay" class="overlay" role="dialog" aria-modal="true">
+    <div class="card">
+      <h1>Enter your Anthropic API key</h1>
+      <input id="apiKeyInput" type="password" placeholder="sk-ant-..." autocomplete="off" />
+      <button id="startButton" type="button">Start camera</button>
+    </div>
+  </div>
+
+  <div id="answerOverlay" class="overlay" role="dialog" aria-modal="true" hidden>
+    <div class="card">
+      <div id="answerText"></div>
+      <button id="okButton" type="button">Ok</button>
+    </div>
+  </div>
+
+  <canvas id="captureCanvas" hidden></canvas>
+  <div id="status"></div>
+
+  <script>
+    const camera = document.getElementById('camera');
+    const answerButton = document.getElementById('answerButton');
+    const keyOverlay = document.getElementById('keyOverlay');
+    const answerOverlay = document.getElementById('answerOverlay');
+    const answerText = document.getElementById('answerText');
+    const statusEl = document.getElementById('status');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const captureCanvas = document.getElementById('captureCanvas');
+
+    let apiKey = '';
+
+    function showStatus(message) {
+      statusEl.textContent = message;
+      statusEl.style.display = message ? 'block' : 'none';
+    }
+
+    async function startCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false,
+      });
+      camera.srcObject = stream;
+    }
+
+    document.getElementById('startButton').addEventListener('click', async () => {
+      apiKey = apiKeyInput.value.trim();
+      if (!apiKey) {
+        showStatus('Please enter your API key first.');
+        return;
+      }
+      try {
+        await startCamera();
+        keyOverlay.hidden = true;
+        showStatus('');
+      } catch (error) {
+        showStatus(`Cannot access camera: ${error.message}`);
+      }
+    });
+
+    answerButton.addEventListener('click', async () => {
+      if (!camera.videoWidth || !camera.videoHeight) {
+        showStatus('Camera is not ready yet.');
+        return;
+      }
+
+      answerButton.disabled = true;
+      showStatus('Asking Claude...');
+
+      captureCanvas.width = camera.videoWidth;
+      captureCanvas.height = camera.videoHeight;
+      const ctx = captureCanvas.getContext('2d');
+      ctx.drawImage(camera, 0, 0, captureCanvas.width, captureCanvas.height);
+      const image = captureCanvas.toDataURL('image/png');
+
+      try {
+        const response = await fetch('/api/answer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiKey, image }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Unknown server error');
+        }
+
+        answerText.textContent = data.answer;
+        answerOverlay.hidden = false;
+        showStatus('');
+      } catch (error) {
+        showStatus(`Error: ${error.message}`);
+      } finally {
+        answerButton.disabled = false;
+      }
+    });
+
+    document.getElementById('okButton').addEventListener('click', () => {
+      answerOverlay.hidden = true;
+    });
+  </script>
+</body>
+</html>
